@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Discord.Audio.Opus;
+using NAudio.Wave;
+using System;
 using System.Collections;
 using System.Diagnostics;
 using System.IO;
@@ -11,6 +13,7 @@ namespace dca4net
     {
         private string __filename;
         private bool disposed = false;
+        private OpusEncoder encoder;
 
         public string Filename
         {
@@ -26,58 +29,50 @@ namespace dca4net
 
         public DcaEncoder()
         {
-            if (!File.Exists("dca.exe"))
-                throw new FileNotFoundException("dca.exe not found.");
+            encoder = new OpusEncoder(48000, 2, 20, 320, OpusApplication.MusicOrMixed);
         }
 
         public DcaEncoder(string filename)
         {
-            if (!File.Exists("dca.exe"))
-                throw new FileNotFoundException("dca.exe not found.");
-
             __filename = filename;
+            encoder = new OpusEncoder(48000, 2, 20, 320, OpusApplication.MusicOrMixed);
         }
 
         public byte[] Encode()
         {
-            Process p = new Process();
-            p.StartInfo.ErrorDialog = true;
+            int ms = 20;
+            int channels = 2;
+            int sampleRate = 48000;
 
-            p.StartInfo.FileName = "dca.exe";
-            p.StartInfo.Arguments = $" \"{__filename}\"";
-            //p.StartInfo.UseShellExecute = false;
-           
-            p.Start();
-            p.WaitForExit();
-
-
-            return null;
-            //Process p = new Process();
-            //p.StartInfo.FileName = "dca.exe";
-            //p.StartInfo.Arguments = $" \"{__filename}\"";
-            //p.StartInfo.RedirectStandardError = true;
-            //p.StartInfo.CreateNoWindow = true;
-            //p.StartInfo.RedirectStandardOutput = true;
-            //p.StartInfo.UseShellExecute = false;
-            //p.Start();
+            int blockSize = 48 * 2 * channels * ms; //the size per each frame to encode
+            byte[] buffer = new byte[blockSize]; //a nicely sized pcm buffer to work with.
+            var outFormat = new WaveFormat(sampleRate, 16, channels);
             
-            //FileStream baseStream = p.StandardOutput.BaseStream as FileStream;
-            //byte[] returnedBytes = null;
-            //int lastRead = 0;
+            if(__filename.EndsWith(".mp3"))
+            {
+                using (var mp3Reader = new Mp3FileReader(__filename))
+                {
+                    using (var resampler = new WaveFormatConversionStream(outFormat, mp3Reader))
+                    {
+                        int byteCount;
+                        using (BinaryWriter bw = new BinaryWriter(new MemoryStream()))
+                        {
+                            while ((byteCount = resampler.Read(buffer, 0, blockSize)) > 0)
+                            {
+                                //now to encode
 
-            //using (MemoryStream ms = new MemoryStream())
-            //{
-            //    byte[] buffer = new byte[4096];
-            //    do
-            //    {
-            //        lastRead = baseStream.Read(buffer, 0, buffer.Length);
-            //        ms.Write(buffer, 0, lastRead);
-            //    } while (lastRead > 0);
-
-            //    returnedBytes = ms.ToArray();
-            //}
-
-            //return returnedBytes;
+                                byte[] opusOutput = new byte[buffer.Length]; //extra bytes but that's okay
+                                int opusEncoded = encoder.EncodeFrame(buffer, 0, opusOutput);
+                                bw.Write((ushort)(opusEncoded)); //write the amount of bytes first
+                                bw.Write(opusOutput, 0, opusEncoded);
+                            }
+                            MemoryStream baseStream = bw.BaseStream as MemoryStream;
+                            return baseStream.ToArray();
+                        }
+                    }
+                }
+            }
+            return null;
         }
 
         protected virtual void Dispose(bool disposing)

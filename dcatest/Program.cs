@@ -1,8 +1,8 @@
 ﻿using System;
-using dca4net;
 using System.Windows.Forms;
 using System.IO;
 using System.Diagnostics;
+using dca4net;
 
 namespace dcatest
 {
@@ -16,19 +16,19 @@ namespace dcatest
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Title = "Select MP3 file to encode.";
             ofd.Filter = "MP3 Files (*.mp3)|*.mp3";
-            if(ofd.ShowDialog() == DialogResult.OK)
+            if (ofd.ShowDialog() == DialogResult.OK)
             {
                 Stopwatch t = new Stopwatch();
                 DcaEncoder encoder = new DcaEncoder(ofd.FileName);
                 t.Start();
                 byte[] encodedBytes = encoder.Encode();
                 t.Stop();
-                if(encodedBytes != null) //encoded ok
+                if (encodedBytes != null) //encoded ok
                 {
                     SaveFileDialog sfd = new SaveFileDialog();
                     sfd.Title = "Save .dca File.";
                     sfd.Filter = "Discord Audio Files (*.dca)|*.dca";
-                    if(sfd.ShowDialog() == DialogResult.OK)
+                    if (sfd.ShowDialog() == DialogResult.OK)
                     {
                         File.WriteAllBytes(sfd.FileName, encodedBytes);
                     }
@@ -37,7 +37,7 @@ namespace dcatest
                 encoder.Dispose();
             }
 
-            
+
             Console.ReadLine();
         }
     }
