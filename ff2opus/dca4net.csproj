@@ -68,6 +68,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DcaDecoder.cs" />
     <Compile Include="DcaEncoder.cs" />
     <Compile Include="DcaReader.cs" />
     <Compile Include="OpusConverter.cs" />

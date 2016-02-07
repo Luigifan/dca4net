@@ -29,13 +29,13 @@ namespace dca4net
 
         public DcaEncoder()
         {
-            encoder = new OpusEncoder(48000, 2, 20, 320, OpusApplication.MusicOrMixed);
+            encoder = new OpusEncoder(48000, 2, 20, null, OpusApplication.MusicOrMixed);
         }
 
         public DcaEncoder(string filename)
         {
             __filename = filename;
-            encoder = new OpusEncoder(48000, 2, 20, 320, OpusApplication.MusicOrMixed);
+            encoder = new OpusEncoder(48000, 2, 20, null, OpusApplication.MusicOrMixed);
         }
 
         public byte[] Encode()
@@ -60,10 +60,9 @@ namespace dca4net
                             while ((byteCount = resampler.Read(buffer, 0, blockSize)) > 0)
                             {
                                 //now to encode
-
                                 byte[] opusOutput = new byte[buffer.Length]; //extra bytes but that's okay
                                 int opusEncoded = encoder.EncodeFrame(buffer, 0, opusOutput);
-                                bw.Write((ushort)(opusEncoded)); //write the amount of bytes first
+                                bw.Write((ushort)opusEncoded);
                                 bw.Write(opusOutput, 0, opusEncoded);
                             }
                             MemoryStream baseStream = bw.BaseStream as MemoryStream;
@@ -83,6 +82,7 @@ namespace dca4net
             if(disposing)
             {
                 __filename = null;
+                encoder.Dispose();
             }
 
             disposed = true;
