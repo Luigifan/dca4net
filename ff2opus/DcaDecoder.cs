@@ -8,6 +8,12 @@ using System.Threading.Tasks;
 
 namespace dca4net
 {
+    public struct ReadData
+    {
+        public byte[] data;
+        public int offset;
+    }
+
     public class DcaDecoder : IDisposable
     {
         private bool disposed = false;
@@ -39,7 +45,7 @@ namespace dca4net
         /// Decodes a dca file to PCM data
         /// </summary>
         /// <returns>byte array with PCM data</returns>
-        public byte[] Decode(int offset)
+        public ReadData Decode(int offset)
         {
             int channels = 2;
             int ms = 20;
@@ -56,13 +62,15 @@ namespace dca4net
                 {
                     byte[] buffer = new byte[bytesToRead];
                     buffer = br.ReadBytes(bytesToRead);
-                    fs.Position = bytesToRead + 2;
                     byte[] pcmBuffer = new byte[blockSize];
                     int bytesDecoded = decoder.DecodeFrame(buffer, 0, bytesToRead, pcmBuffer);
-                    return pcmBuffer;
+                    ReadData r = new ReadData();
+                    r.offset = bytesToRead + offset;
+                    r.data = pcmBuffer;
+                    return r;
                 }
             }
-            return null;
+            return new ReadData();
         }
         
         private byte[] makeGiantByteArray(List<byte[]> buffers)

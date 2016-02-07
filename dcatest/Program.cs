@@ -34,13 +34,13 @@ namespace dcatest
                 Stopwatch t = new Stopwatch();
                 DcaDecoder decoder = new DcaDecoder(ofd.FileName);
                 t.Start();
-                int offset = 0;
-                byte[] pcmData;
+                ReadData pcmData = new ReadData();
+                pcmData.offset = 0;
+                pcmData.data = new byte[1];
                 List<byte[]> bytes = new List<byte[]>();
-                while ((pcmData = decoder.Decode(offset)) != null)
+                while ((pcmData = decoder.Decode(pcmData.offset)).data != null)
                 {
-                    bytes.Add(pcmData);
-                    offset += pcmData.Length;
+                    bytes.Add(pcmData.data);
                 }
 
                 byte[] FINAL;
